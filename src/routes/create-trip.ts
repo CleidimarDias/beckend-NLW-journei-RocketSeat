@@ -1,16 +1,13 @@
 import { FastifyInstance } from "fastify";
 import { ZodTypeProvider } from "fastify-type-provider-zod";
-import { z } from 'zod'
+import { z } from 'zod';
 import { prisma } from "../lib/prisma";
-import dayjs from "dayjs";
-import localizedFormat from 'dayjs/plugin/localizedFormat'
-import 'dayjs/locale/pt-br'
 import { getMailClient } from "../lib/mail";
 import nodemailer from "nodemailer"
+import { dayjs } from "../lib/dayjs";
 
 
-dayjs.locale('pt-br')
-dayjs.extend(localizedFormat);
+
 
 export async function createTrip(app: FastifyInstance) {
     app.withTypeProvider<ZodTypeProvider>().post('/trips', {
@@ -18,8 +15,8 @@ export async function createTrip(app: FastifyInstance) {
         schema: {
             body: z.object({
                 destination: z.string().min(4),
-                starts_at: z.coerce.date(),
-                ends_at: z.coerce.date(),
+                starts_at: z.coerce.date(), //coerse converte string para data
+                ends_at: z.coerce.date(), // coerce converte string para data
                 owner_name: z.string(),
                 owner_email: z.string().email(),
                 emails_to_invite: z.array(z.string().email()),
@@ -43,7 +40,7 @@ export async function createTrip(app: FastifyInstance) {
                 starts_at,
                 ends_at,
                 participants: {
-                    createMany: {
+                    createMany: {  //utilizando os recursos de transactions do prisma
                         data: [
                             {
                                 name: owner_name,
@@ -65,15 +62,7 @@ export async function createTrip(app: FastifyInstance) {
         const formattedStartDate = dayjs(starts_at).format('LL')
         const formattedEndDate = dayjs(ends_at).format('LL')
 
-        const confirmationLink = `http://localhost:3333/trips/${trip.id}/confirm`
-
-        // await prisma.participant.create({
-        //     data: {
-        //         name: owner_name,
-        //         email: owner_email,
-        //         trip_id: trip.id,
-        //     }
-        // })
+        const confirmationLink = `http://localhost:3333/trips/${trip.id}/confirm`        
 
         const mail = await getMailClient();
 
