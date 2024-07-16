@@ -5,6 +5,7 @@ import { prisma } from "../lib/prisma";
 import { getMailClient } from "../lib/mail";
 import nodemailer from "nodemailer"
 import { dayjs } from "../lib/dayjs";
+import { ClientError } from "../errors/client-error";
 
 
 
@@ -36,15 +37,15 @@ export async function createActivity(app: FastifyInstance) {
         })
 
         if(!trip){
-            throw new Error("Trip not foutn")
+            throw new ClientError("Trip not foutn")
         }
 
         if(dayjs(occurs_at).isBefore(trip.starts_at)){
-            throw new Error("Invalid activity date.")
+            throw new ClientError("Invalid activity date.")
         }
 
         if(dayjs(occurs_at).isAfter(trip.ends_at)){
-            throw new Error("Invalid acitivity date.")
+            throw new ClientError("Invalid acitivity date.")
         }
 
         const activity = await prisma.activity.create({
